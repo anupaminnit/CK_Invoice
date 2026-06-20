@@ -175,6 +175,17 @@ nav{background:var(--brown);padding:0 36px;display:flex;align-items:center;justi
 .dt-btn:not(.active):hover{background:var(--ivory);color:var(--brown)}
 
 #bankPreview{background:var(--ivory);border:1.5px solid var(--gold);border-left:4px solid var(--brown);border-radius:var(--r);padding:12px 16px;font-size:.82rem;color:var(--brown);margin-bottom:18px;line-height:1.85}
+/* ── RICH TEXT EDITOR ── */
+.rte-wrap{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:#fff}
+.rte-tb{display:flex;align-items:center;gap:3px;padding:5px 8px;background:#f8f8f5;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.rte-btn{background:none;border:1px solid transparent;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:13px;color:#374151;line-height:1.2;font-family:inherit}
+.rte-btn:hover{background:var(--ivory);border-color:var(--gold)}
+.rte-sep{width:1px;height:18px;background:var(--border);margin:0 3px;flex-shrink:0}
+.rte-sel{font-size:11px;border:1px solid var(--border);border-radius:4px;padding:2px 4px;background:#fff;cursor:pointer;color:#374151}
+.rte-color{width:26px;height:24px;border:1px solid var(--border);border-radius:4px;padding:1px 2px;cursor:pointer;background:#fff}
+.rte-editor{min-height:210px;padding:12px 14px;font-size:14px;line-height:1.75;outline:none;color:#1c1c1e}
+.rte-editor:focus{outline:2px solid var(--gold);outline-offset:-2px}
+
 </style>
 </head>
 <body>
@@ -468,13 +479,39 @@ nav{background:var(--brown);padding:0 36px;display:flex;align-items:center;justi
         <div class="sl" style="margin-top:16px">Letter Body</div>
         <div class="f">
           <label>Content <span>*</span></label>
-          <textarea id="ltrBody" rows="14" style="line-height:1.75" placeholder="Dear Sir/Madam,&#10;&#10;We are pleased to submit our quotation for the supply of Activated Carbon as per your requirements.&#10;&#10;[Write your letter content here. Blank lines between paragraphs are preserved in the PDF.]&#10;&#10;We look forward to your valued order and assure you of our best services at all times.&#10;&#10;Thanking you."></textarea>
+          <div class="rte-wrap">
+            <div class="rte-tb">
+              <button type="button" class="rte-btn" onmousedown="event.preventDefault();rteCmd('bold')" title="Bold"><b>B</b></button>
+              <button type="button" class="rte-btn" onmousedown="event.preventDefault();rteCmd('italic')" title="Italic"><i>I</i></button>
+              <button type="button" class="rte-btn" onmousedown="event.preventDefault();rteCmd('underline')" title="Underline"><u>U</u></button>
+              <div class="rte-sep"></div>
+              <select class="rte-sel" onmousedown="rteSaveRange()" onchange="rteSetSize(this.value);this.value=''" title="Font size">
+                <option value="">Size</option>
+                <option value="8">8 pt</option>
+                <option value="9">9 pt</option>
+                <option value="10">10 pt</option>
+                <option value="11">11 pt</option>
+                <option value="12">12 pt</option>
+                <option value="14">14 pt</option>
+              </select>
+              <input type="color" class="rte-color" value="#1c1c1e" onmousedown="rteSaveRange()" onchange="rteColor(this.value)" title="Text colour">
+              <div class="rte-sep"></div>
+              <button type="button" class="rte-btn" onmousedown="event.preventDefault();rteCmd('justifyLeft')" title="Align left" style="font-size:15px">&#8676;</button>
+              <button type="button" class="rte-btn" onmousedown="event.preventDefault();rteCmd('justifyFull')" title="Justify" style="font-size:15px">&#8596;</button>
+            </div>
+            <div id="ltrBody" contenteditable="true" class="rte-editor"
+                 data-ph="Dear Sir/Madam,
+
+Please write your letter content here.
+
+Blank lines between paragraphs are preserved in the PDF."></div>
+          </div>
         </div>
       </div>
     </div>
     <div class="br" style="margin-top:10px">
       <button class="btn bs" onclick="showPreview()" style="background:var(--brown);color:var(--lgold);border-color:var(--gold)">&#128065; Preview Letter</button>
-      <button class="btn bg" onclick="makePDF()">&#8659; Download Letter (PDF)</button>
+      <button class="btn bg" onclick="makePDF()">&#8659; Open Letter (Print to PDF)</button>
     </div>
   </div>
 </div>
@@ -1188,10 +1225,16 @@ function showPreview(){
         _previewBlobUrl=URL.createObjectURL(doc.output("blob"));frame.src=_previewBlobUrl;frame.style.display='';
         document.getElementById('previewHTMLFrame').style.display='none';
       } else if(docType==='letter'){
-        const {jsPDF}=window.jspdf;const doc=buildLetter(jsPDF);
+        const ltrHtml=buildLetterHTML();
         if(_previewBlobUrl){URL.revokeObjectURL(_previewBlobUrl);_previewBlobUrl=null;}
-        _previewBlobUrl=URL.createObjectURL(doc.output("blob"));frame.src=_previewBlobUrl;frame.style.display='';
-        document.getElementById('previewHTMLFrame').style.display='none';
+        _previewBlobUrl=URL.createObjectURL(new Blob([ltrHtml],{type:'text/html'}));
+        frame.style.display='none';
+        const pane=document.getElementById('previewHTMLFrame');
+        pane.style.display='flex';pane.style.flexDirection='column';pane.style.alignItems='center';pane.style.gap='20px';
+        const iframe=document.createElement('iframe');
+        iframe.style.cssText='width:210mm;height:297mm;border:none;box-shadow:0 2px 16px rgba(0,0,0,.18);background:#fff';
+        iframe.src=_previewBlobUrl;
+        pane.innerHTML='';pane.appendChild(iframe);
       } else {
         const html=buildHTMLDoc();
         if(_previewBlobUrl){URL.revokeObjectURL(_previewBlobUrl);_previewBlobUrl=null;}
@@ -1864,19 +1907,210 @@ function buildLetter(jsPDF) {
 
 // ═══════════════════════════════════════════════════
 // MAIN PDF DOWNLOAD
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════// ── Rich text editor helpers ────────────────────────────────────────────────
+let _rteRange = null;
+function rteSaveRange() {
+  const sel = window.getSelection();
+  if (sel && sel.rangeCount) _rteRange = sel.getRangeAt(0).cloneRange();
+}
+function rteRestoreRange() {
+  if (!_rteRange) return false;
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(_rteRange);
+  return true;
+}
+function rteCmd(cmd) { document.execCommand(cmd, false, null); }
+function rteSetSize(pt) {
+  if (!pt) return;
+  if (!rteRestoreRange()) return;
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount || sel.isCollapsed) return;
+  try {
+    const range = sel.getRangeAt(0);
+    const frag  = range.extractContents();
+    const span  = document.createElement('span');
+    span.style.fontSize = pt + 'pt';
+    span.appendChild(frag);
+    range.insertNode(span);
+    sel.removeAllRanges();
+    const r2 = document.createRange();
+    r2.selectNodeContents(span);
+    sel.addRange(r2);
+    _rteRange = r2.cloneRange();
+  } catch(e) { console.warn('rteSetSize:', e); }
+}
+function rteColor(c) {
+  rteRestoreRange();
+  document.execCommand('foreColor', false, c);
+  rteSaveRange();
+}
+(function initRteEditor() {
+  const el = document.getElementById('ltrBody');
+  if (!el) return;
+  const ph = (el.dataset.ph || '').replace(/\\n/g, '\n');
+  function showPh() {
+    if (!el.textContent.trim())
+      el.innerHTML = '<span style="color:#9ca3af;pointer-events:none;white-space:pre-wrap">' + ph + '</span>';
+  }
+  function clearPh() {
+    const first = el.firstElementChild;
+    if (first && first.style.color === 'rgb(156, 163, 175)') el.innerHTML = '';
+  }
+  showPh();
+  el.addEventListener('focus', clearPh);
+  el.addEventListener('blur',  showPh);
+  el.addEventListener('mouseup', rteSaveRange);
+  el.addEventListener('keyup',   rteSaveRange);
+})();
+
+function buildLetterHTML() {
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  const v = id => document.getElementById(id)?.value || "";
+  const ref     = v("ltrRef") || "CKLLP/LTR/2026/001";
+  const rawDate = v("ltrDate");
+  const dateStr = rawDate ? rawDate.split("-").reverse().join("/")
+                          : new Date().toLocaleDateString("en-IN");
+  const toText  = v("ltrTo");
+  const subject = v("ltrSubject");
+
+  const bodyEl  = document.getElementById("ltrBody");
+  let rawHTML   = bodyEl ? bodyEl.innerHTML : '';
+  const tmp = document.createElement('div');
+  tmp.innerHTML = rawHTML;
+  const phSpan  = tmp.querySelector('span[style*="rgb(156, 163, 175)"]');
+  if (phSpan) phSpan.remove();
+  const bodyHTML = tmp.innerHTML.trim();
+
+  let toHTML = '';
+  if (toText.trim()) {
+    const lines = toText.split("\n").map(l=>esc(l.trim())).filter(l=>l);
+    toHTML = `<div class="to-block"><div class="to-lbl">To,</div>${lines.map(l=>`<div>${l}</div>`).join('')}</div>`;
+  }
+  let subHTML = '';
+  if (subject.trim()) {
+    subHTML = `<div class="subject"><strong>Sub:</strong> ${esc(subject)}</div>`;
+  }
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Carbon King LLP — Official Letter</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:9.5pt;color:#1c1c1e;background:#fff}
+@page{size:A4;margin:0}
+@media print{
+  body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .ftr-wrap{position:fixed;bottom:0;left:0;right:0}
+}
+.page{width:210mm;margin:0 auto;padding-bottom:16mm}
+/* header */
+.hg{background:#c8a820;height:2mm}
+.hd{background:#1c1c1e;display:flex;justify-content:space-between;align-items:center;padding:3mm 14mm 3.5mm;gap:4mm}
+.hleft{display:flex;align-items:center;gap:5mm}
+.logo{width:14mm;height:14mm;object-fit:contain}
+.cname{color:#f4f0e6;font-size:12pt;font-weight:700;margin-bottom:1mm}
+.ctag{color:#c8a820;font-size:6pt;letter-spacing:.4pt}
+.hright{text-align:right}
+.cfull{color:#c8a820;font-size:6pt;font-weight:700;margin-bottom:1mm}
+.caddr{color:#9a9aa8;font-size:5pt;line-height:1.7}
+.ccontact{color:#f4f0e6;font-size:5pt;margin-top:1mm}
+.hg2{background:#c8a820;height:1.2mm}
+/* reg strip / footer */
+.ftr-wrap{width:210mm;margin:0 auto}
+.ftrbar{background:#1c1c1e;display:flex;justify-content:space-between;padding:2mm 14mm 2mm}
+.fc{text-align:center}
+.fc:first-child{text-align:left}
+.fc:last-child{text-align:right}
+.fk{display:block;color:#9a9aa8;font-size:4pt;font-weight:600;text-transform:uppercase;letter-spacing:.3pt;margin-bottom:.5mm}
+.fv{color:#fff;font-size:5.5pt;font-weight:700}
+.fvg{color:#c8a820;font-size:5.5pt;font-weight:700}
+/* body */
+.lbody{padding:5mm 14mm 3mm}
+.refrow{display:flex;justify-content:space-between;font-size:8.5pt;margin-bottom:5mm}
+.to-block{font-size:8.5pt;line-height:1.5;margin-bottom:4mm}
+.to-lbl{color:#6b6b73;font-size:7.5pt}
+.subject{font-size:9pt;margin-bottom:4mm}
+.body-content{font-size:9.5pt;line-height:1.6;text-align:justify}
+.body-content p,.body-content div{margin-bottom:3.5mm}
+.body-content p:last-child,.body-content div:last-child{margin-bottom:0}
+.body-content b,.body-content strong{font-weight:700}
+.body-content i,.body-content em{font-style:italic}
+.body-content u{text-decoration:underline}
+/* signatory */
+.sig{padding:4mm 14mm 3mm;page-break-inside:avoid}
+.closing{font-size:8.5pt;margin-bottom:5mm}
+.seal{width:48mm;display:block;margin-bottom:3mm}
+.sigline{width:70mm;border-top:1px solid #1c1c1e;margin-bottom:3mm}
+.sigco{font-size:8.5pt;font-weight:700;margin-bottom:3mm}
+.signame{font-size:8pt;margin-bottom:3mm}
+.sigtitle{font-size:7pt;color:#6b6b73}
+</style>
+</head>
+<body>
+<div class="page">
+<header>
+  <div class="hg"></div>
+  <div class="hd">
+    <div class="hleft">
+      <img class="logo" src="data:image/png;base64,${LH_LOGO_B64}" alt="">
+      <div><div class="cname">CARBON KING LLP</div><div class="ctag">ACTIVATED CARBON · ROURKELA</div></div>
+    </div>
+    <div class="hright">
+      <div class="cfull">CARBON KING LLP</div>
+      <div class="caddr">C-651, Koel Nagar, Shakti Nagar, Rourkela — 769014, Odisha, India</div>
+      <div class="ccontact">carbonking07@gmail.com</div>
+    </div>
+  </div>
+  <div class="hg2"></div>
+</header>
+<div class="lbody">
+  <div class="refrow"><span>Ref: ${esc(ref)}</span><span>Date: ${esc(dateStr)}</span></div>
+  ${toHTML}
+  ${subHTML}
+  <div class="body-content">${bodyHTML}</div>
+</div>
+<div class="sig">
+  <div class="closing">Yours faithfully,</div>
+  <img class="seal" src="data:image/jpeg;base64,${SIG_B64}" alt="">
+  <div class="sigline"></div>
+  <div class="sigco">For CARBON KING LLP</div>
+  <div class="signame">Authorised Signatory</div>
+  <div class="sigtitle">PARTNER / DIRECTOR</div>
+</div>
+<div class="ftr-wrap">
+  <div class="ftrbar">
+    <div class="fc"><span class="fk">GST NO</span><span class="fv">21AATFC8810B1ZR</span></div>
+    <div class="fc"><span class="fk">IEC NO</span><span class="fv">AATFC8810B</span></div>
+    <div class="fc"><span class="fk">LUT NO</span><span class="fvg">AD210326009176I</span></div>
+  </div>
+</div>
+</div>
+</body>
+</html>`;
+}
+
+
 function makePDF() {
-  const isLtr=docType==='letter';
-  const btn=isLtr?null:document.getElementById("genBtn");
+  if (docType === 'letter') {
+    try {
+      const html = buildLetterHTML();
+      const blob = new Blob([html], {type:'text/html'});
+      window.open(URL.createObjectURL(blob), '_blank');
+      toast("Letter opened — use Ctrl+P / ⌘P to save as PDF","ok");
+    } catch(e) { console.error(e); toast("Error: "+e.message,"err"); }
+    return;
+  }
+  const btn=document.getElementById("genBtn");
   if(btn){btn.disabled=true;btn.textContent="⏳ Generating PDF...";}
   setTimeout(()=>{
     try{
-      if(docType==='letter'){
-        const {jsPDF}=window.jspdf;const doc=buildLetter(jsPDF);
-        const ref=(document.getElementById("ltrRef")?.value||"CKLLP-LETTER").replace(/\//g,"-");
-        const isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        if(isMobile){const blob=doc.output("blob"),url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.target="_blank";a.rel="noopener";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(url);document.body.removeChild(a);},3000);toast("PDF opened","ok");}
-        else{doc.save(ref+".pdf");toast("Letter PDF downloaded!","ok");}
+      if(false){
       } else {
         const invNo=document.getElementById("invNo")?.value||"";
         if(invNo)localStorage.setItem("ck_last_inv_no",invNo);
