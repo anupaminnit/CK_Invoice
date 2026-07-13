@@ -1224,7 +1224,7 @@ function buildHTMLDoc() {
   const PARTIES='<div class="pgrid">'
     +'<div class="cell" style="border-right:1px solid var(--line);">'
     +'<div class="k">CONSIGNEE / BUYER'+(consType==='order'?' &mdash; TO THE ORDER':'')+'</div>'
-    +'<div class="vmain">'+consStr+'</div><div class="vsub">'+nAddr+'</div>'
+    +'<div class="vmain">'+consStr+'</div>'+(consType==='order'?'':'<div class="vsub">'+nAddr+'</div>')
     +(nTax?'<div class="vsub" style="margin-top:4px;"><span style="color:var(--mute);font-family:var(--mono);font-size:8px;">TAX CODE:</span> '+nTax+'</div>':'')
     +'</div><div class="cell"><div class="k">NOTIFY PARTY</div>'
     +'<div class="vmain">'+notify+'</div><div class="vsub">'+nAddr+'</div></div></div>';
