@@ -740,12 +740,13 @@ function updateCurrency() {
 // ── Shared utilities ─────────────────────────────────────────────────────────
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function escNl(s){return esc(s).replace(/\n/g,'<br>');}
+function num(s){return parseFloat(String(s||'').replace(/,/g,''))||0;}
 
 // ═══════════════════════════════════════════════════
 // GOODS TABLE
 // ═══════════════════════════════════════════════════
 function computeGrandTotal() {
-  return goodsRows.reduce((s,r)=>s+(parseFloat(r.qty)||0)*(parseFloat(r.rate)||0),0);
+  return goodsRows.reduce((s,r)=>s+num(r.qty)*num(r.rate),0);
 }
 function computeGST() {
   const sub = computeGrandTotal();
@@ -760,7 +761,7 @@ function rebuildGoods() {
   const tbody = document.getElementById("goodsBody");
   tbody.innerHTML = "";
   goodsRows.forEach((r,i) => {
-    const amt = (parseFloat(r.qty)||0)*(parseFloat(r.rate)||0);
+    const amt = num(r.qty)*num(r.rate);
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td style="text-align:center;color:var(--muted);font-size:.75rem">${i+1}</td>
@@ -1132,7 +1133,7 @@ function autoInvoiceNumber() {
   }).catch(e=>console.warn('nextInvoiceNo lookup failed, using local fallback:',e));
 }
 function autoSumGrossWeight() {
-  const total=goodsRows.reduce((s,r)=>s+(parseFloat(r.itemGrossWt)||0),0);
+  const total=goodsRows.reduce((s,r)=>s+num(r.itemGrossWt),0);
   if(total>0){document.getElementById("grossWt").value=total.toFixed(2);toast("Gross weight: "+total.toFixed(2)+" KGS","ok");}
   else toast("No item gross weights found","err");
 }
@@ -1188,9 +1189,9 @@ function buildHTMLDoc() {
   const items    = goodsRows.map((r,i)=>({
     sr:i+1, desc:(r.desc||"").toUpperCase(), hs:(r.hscode||"").toUpperCase(),
     unit:(r.unit||"METRIC TONNES").toUpperCase(),
-    qty:parseFloat(r.qty)||0, rate:parseFloat(r.rate)||0,
-    amount:(parseFloat(r.qty)||0)*(parseFloat(r.rate)||0),
-    bags:parseInt(r.bags)||0, gross:parseFloat(r.itemGrossWt)||0,
+    qty:num(r.qty), rate:num(r.rate),
+    amount:num(r.qty)*num(r.rate),
+    bags:Math.trunc(num(r.bags)), gross:num(r.itemGrossWt),
   }));
   const totalQty=items.reduce((a,it)=>a+it.qty,0);
   const totalBags=items.reduce((a,it)=>a+it.bags,0);
@@ -1356,8 +1357,8 @@ function buildQuotationHTML() {
   const items = goodsRows.map((r,i) => ({
     sr: i+1, desc: (r.desc||"").toUpperCase(), hs: (r.hscode||"").toUpperCase(),
     unit: (r.unit||"METRIC TONNES").toUpperCase(),
-    qty: parseFloat(r.qty)||0, rate: parseFloat(r.rate)||0,
-    amount: (parseFloat(r.qty)||0)*(parseFloat(r.rate)||0),
+    qty: num(r.qty), rate: num(r.rate),
+    amount: num(r.qty)*num(r.rate),
   }));
   const totalQty = items.reduce((a,it)=>a+it.qty, 0);
 
@@ -1786,7 +1787,7 @@ function buildDoc(jsPDF, isProforma=false) {
     const rowH=Math.max(10,dL.length*3.8+4);
     bx(ML,Y,CW,rowH,globalRI%2===0?WHITE:IVORY,GOLD,0.1);
     fn(6,"normal");tc(BROWN);let cx=ML;
-    const amt=(parseFloat(r.qty)||0)*(parseFloat(r.rate)||0);
+    const amt=num(r.qty)*num(r.rate);
     const vals=isPL?[String(globalRI+1),desc,r.hscode,r.unit.toUpperCase(),String(r.qty),r.bags||"-",(r.itemGrossWt||grossWt)+" KGS"]
       :[String(globalRI+1),desc,r.hscode,r.unit.toUpperCase(),String(r.qty),curSym+fmt(r.rate)+"/MT",curSym+fmt(amt)];
     vals.forEach((v,vi)=>{
@@ -1802,7 +1803,7 @@ function buildDoc(jsPDF, isProforma=false) {
   const chunks=[];
   for(let i=0;i<goodsRows.length;i+=ITEMS_PER_PAGE)chunks.push(goodsRows.slice(i,i+ITEMS_PER_PAGE));
   if(chunks.length===0)chunks.push([]);
-  const tQ=goodsRows.reduce((s,r)=>s+(parseFloat(r.qty)||0),0);
+  const tQ=goodsRows.reduce((s,r)=>s+num(r.qty),0);
 
   // COMMERCIAL INVOICE PAGES
   chunks.forEach((chunk,pageIdx)=>{
