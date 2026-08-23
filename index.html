@@ -1210,7 +1210,7 @@ function buildHTMLDoc() {
 
   const MAST='<div class="mast"><div class="mast-l"><div class="mast-mark"><img src="'+MARK+'" width="54" height="54"/></div><div><div class="mast-name">CARBON KING LLP</div><div class="mast-rule"></div><div class="mast-tag">ACTIVATED CARBON &middot; ROURKELA</div></div></div>'
     +'<div class="mast-r"><div class="em" style="font-size:9px;margin-bottom:2px;">CARBON KING LLP</div>'
-    +'C-651, KOEL NAGAR, SHAKTI NAGAR, ROURKELA - 769014, ODISHA, INDIA<br>'
+    +'C-651, SHAKTI NAGAR KOELNAGAR ROAD, KOELNAGAR, ROURKELA, SUNDARGARH, ROURKELA 769014, ODISHA, INDIA<br>'
     +'<span class="lbl">EMAIL</span> CARBONKING07@GMAIL.COM<br>'
     +'<span class="lbl">GST</span> <span class="em">21AATFC8810B1ZR</span>'
     +'&nbsp;<span class="lbl">IEC</span> AATFC8810B&nbsp;<span class="lbl">LUT</span> AD210326009176I'
@@ -1366,7 +1366,7 @@ function buildQuotationHTML() {
 
   const MAST='<div class="mast"><div class="mast-l"><div class="mast-mark"><img src="'+MARK+'" width="54" height="54"/></div><div><div class="mast-name">CARBON KING LLP</div><div class="mast-rule"></div><div class="mast-tag">ACTIVATED CARBON &middot; ROURKELA</div></div></div>'
     +'<div class="mast-r"><div class="em" style="font-size:9px;margin-bottom:2px;">CARBON KING LLP</div>'
-    +'C-651, KOEL NAGAR, SHAKTI NAGAR, ROURKELA - 769014, ODISHA, INDIA<br>'
+    +'C-651, SHAKTI NAGAR KOELNAGAR ROAD, KOELNAGAR, ROURKELA, SUNDARGARH, ROURKELA 769014, ODISHA, INDIA<br>'
     +'<span class="lbl">EMAIL</span> CARBONKING07@GMAIL.COM<br>'
     +'<span class="lbl">GST</span> <span class="em">21AATFC8810B1ZR</span>'
     +'&nbsp;<span class="lbl">IEC</span> AATFC8810B&nbsp;<span class="lbl">LUT</span> AD210326009176I'
@@ -1390,7 +1390,7 @@ function buildQuotationHTML() {
     +'</div>'
     +'<div class="cell"><div class="k">EXPORTER</div>'
     +'<div class="vmain">CARBON KING LLP</div>'
-    +'<div class="vsub">C-651, KOEL NAGAR, SHAKTI NAGAR,<br>ROURKELA - 769014, ODISHA, INDIA</div>'
+    +'<div class="vsub">C-651, SHAKTI NAGAR KOELNAGAR ROAD, KOELNAGAR,<br>ROURKELA, SUNDARGARH, ROURKELA 769014, ODISHA, INDIA</div>'
     +'<div class="vsub" style="margin-top:4px;"><span style="color:var(--mute);font-family:var(--mono);font-size:8px;">IEC</span> AATFC8810B &nbsp;|&nbsp; <span style="color:var(--mute);font-family:var(--mono);font-size:8px;">GST</span> 21AATFC8810B1ZR</div>'
     +'<div class="vsub"><span style="color:var(--mute);font-family:var(--mono);font-size:8px;">LUT NO</span> AD210326009176I</div>'
     +'</div></div>';
@@ -1593,7 +1593,7 @@ function buildPaymentReceipt(jsPDF){
   fc(GOLD);doc.rect(0,30,PW,2,"F");
   doc.addImage("data:image/png;base64,"+LOGO_B64,"PNG",ML+1,2,28,28);
   fn(13,"bold");tc(GOLD);doc.text("CARBON KING LLP",ML+33,12);
-  fn(6,"normal");tc(IVORY);doc.text("C-651, KOEL NAGAR, SHAKTI NAGAR, ROURKELA - 769014, ODISHA, INDIA",ML+33,18.5);
+  fn(6,"normal");tc(IVORY);doc.text("C-651, SHAKTI NAGAR KOELNAGAR ROAD, KOELNAGAR, ROURKELA, SUNDARGARH, ROURKELA 769014, ODISHA, INDIA",ML+33,18.5);
   fn(5.5,"normal");tc(IVORY);
   doc.text("GST: 21AATFC8810B1ZR  |  IEC: AATFC8810B  |  LUT NO AD210326009176I",ML+33,24);
   doc.text("CARBONKING07@GMAIL.COM",ML+CW,24,{align:"right"});
@@ -1706,7 +1706,7 @@ function buildDoc(jsPDF, isProforma=false) {
     fc(GOLD);doc.rect(0,30,PW,2,"F");
     doc.addImage("data:image/png;base64,"+LOGO_B64,"PNG",ML+1,2,28,28);
     fn(13,"bold");tc(GOLD);doc.text("CARBON KING LLP",ML+33,12);
-    fn(6,"normal");tc(IVORY);doc.text("C-651, KOEL NAGAR, SHAKTI NAGAR, ROURKELA - 769014, ODISHA, INDIA",ML+33,18.5);
+    fn(6,"normal");tc(IVORY);doc.text("C-651, SHAKTI NAGAR KOELNAGAR ROAD, KOELNAGAR, ROURKELA, SUNDARGARH, ROURKELA 769014, ODISHA, INDIA",ML+33,18.5);
     fn(5.5,"normal");tc(IVORY);
     doc.text("GST: 21AATFC8810B1ZR  |  IEC: AATFC8810B  |  LUT NO AD210326009176I",ML+33,24);
     doc.text("CARBONKING07@GMAIL.COM",ML+CW,24,{align:"right"});
@@ -1724,8 +1724,8 @@ function buildDoc(jsPDF, isProforma=false) {
     bx(ML,leftY,LW,26,IVORY,GOLD,0.12);
     fn(6.5,"bold");tc(BROWN);doc.text("CARBON KING LLP",ML+2,leftY+5.5);
     fn(6,"normal");tc(BROWN);
-    doc.text("C-651, KOEL NAGAR, SHAKTI NAGAR,",ML+2,leftY+10,{maxWidth:LW-3});
-    doc.text("ROURKELA - 769014, ODISHA, INDIA",ML+2,leftY+14.5);
+    doc.text("C-651, SHAKTI NAGAR KOELNAGAR ROAD, KOELNAGAR,",ML+2,leftY+10,{maxWidth:LW-3});
+    doc.text("ROURKELA, SUNDARGARH, ROURKELA 769014, ODISHA, INDIA",ML+2,leftY+14.5,{maxWidth:LW-3});
     doc.text("IEC - AATFC8810B  |  GST: 21AATFC8810B1ZR",ML+2,leftY+19,{maxWidth:LW-3});
     doc.text("LUT NO AD210326009176I",ML+2,leftY+23.5);
     leftY+=26;
@@ -2045,7 +2045,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;f
     </div>
     <div class="hright">
       <div class="cfull">CARBON KING LLP</div>
-      <div class="caddr">C-651, Koel Nagar, Shakti Nagar, Rourkela — 769014, Odisha, India</div>
+      <div class="caddr">C-651, Shakti Nagar Koelnagar Road, Koelnagar, Rourkela, Sundargarh, Rourkela 769014, Odisha, India</div>
       <div class="ccontact">carbonking07@gmail.com</div>
     </div>
   </div>
