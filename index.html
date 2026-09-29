@@ -271,7 +271,7 @@ nav{background:var(--brown);padding:0 36px;display:flex;align-items:center;justi
       <div class="cb">
         <div id="invTypeRow" style="margin-bottom:14px;max-width:260px">
           <div class="f"><label>Invoice Type</label>
-            <select id="invType" onchange="updateInvTypeUI()">
+            <select id="invType" onchange="updateInvTypeUI();autoInvoiceNumber()">
               <option value="commercial">Commercial Invoice</option>
               <option value="proforma">Proforma Invoice</option>
             </select>
@@ -1027,6 +1027,7 @@ function switchDocType(type) {
     const itr=document.getElementById('invTypeRow');if(itr)itr.style.display=isInv?'':'none';
     updateUnitLabels();
     updateInvTypeUI();
+    autoInvoiceNumber();
     const steps=document.querySelectorAll('.stp');
     if(steps[3])steps[3].textContent=isQt?'④ Quotation Details':'④ Packing & Generate';
     const s1h=document.querySelector('#s1 .ch h2');
@@ -1118,10 +1119,11 @@ function deleteNamedDraft(i){
 function saveDraft(){openDraftManager();}
 function loadDraft(){openDraftManager();}
 function cloneInvoice() {
-  const d=getDraftData();const m=(d.invNo||"").match(/^([A-Za-z\/]+)(\d+)\//);
-  if(m)d.invNo=m[1]+String(parseInt(m[2])+1).padStart(3,"0")+"/"+getCurrentFY();
+  const d=getDraftData();
   const t=new Date();d.invDate=t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");
-  restoreDraft(d);go(0);toast("Invoice cloned","ok");
+  restoreDraft(d);
+  autoInvoiceNumber(true);   // next number from the Sheet, not a local +1 that may already be taken
+  go(0);toast("Invoice cloned","ok");
 }
 
 // ═══════════════════════════════════════════════════
@@ -1177,28 +1179,42 @@ function getCurrentFY() {
 function autoFillDate() {
   const el=document.getElementById("invDate");if(el&&!el.value){const t=new Date();el.value=t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");}
 }
-function fallbackInvoiceNo() {
-  const saved=localStorage.getItem("ck_last_inv_no");
-  if(saved){const m=saved.match(/^([A-Za-z\/]+)(\d+)\//);if(m)return m[1]+String(parseInt(m[2])+1).padStart(3,"0")+"/"+getCurrentFY();}
-  return "CKLLP/007/26-27";
+// Each document type has its own number series so quotations and proformas
+// don't consume commercial-invoice numbers. The Sheet's nextInvoiceNo matches
+// "<prefix><NNN>/<fy>" exactly, so prefix "CKLLP/" never counts "CKLLP/QT/…".
+const NUMBER_PREFIX={invoice:'CKLLP/',proforma:'CKLLP/PI/',quotation:'CKLLP/QT/'};
+function numberSeries(){return docType==='quotation'?'quotation':isProforma()?'proforma':'invoice';}
+function lastNoKey(series){return 'ck_last_no_'+series;}
+function fallbackInvoiceNo(series){
+  const prefix=NUMBER_PREFIX[series],fy=getCurrentFY();
+  // ck_last_inv_no is the pre-series key; still honour it for invoices.
+  const last=localStorage.getItem(lastNoKey(series))
+    ||(series==='invoice'?localStorage.getItem('ck_last_inv_no'):null)||'';
+  const m=last.match(/^(.*\/)(\d+)\/([\d-]+)$/);
+  // Continue only within the same series and financial year. With nothing to
+  // continue from, invoices start at 007 in FY 26-27 (the previous hard-coded
+  // default); every other series starts at 001.
+  const seq=m&&m[1]===prefix&&m[3]===fy?parseInt(m[2],10)+1:(series==='invoice'&&fy==='26-27'?7:1);
+  return prefix+String(seq).padStart(3,'0')+'/'+fy;
 }
+let _autoNo='';   // the number we last filled in automatically
 // localStorage only tracks "last number issued by this browser" — across
 // devices that drifts out of sync and produces duplicate invoice numbers.
-// Fill in the local guess immediately (so the field isn't empty), then ask
-// the Sheet — the actual source of truth — for the real next number and
-// swap it in, unless the user has since typed something else themselves.
-function autoInvoiceNumber() {
-  const el=document.getElementById("invNo");if(!el||el.value)return;
-  const fallback=fallbackInvoiceNo();
-  el.value=fallback;
+// Fill in the local guess immediately, then ask the Sheet (the source of
+// truth) for the real next number and swap it in unless the user has typed
+// something else. Re-runs on doc/invoice-type changes; a number the user
+// typed is kept unless force.
+function autoInvoiceNumber(force) {
+  const el=document.getElementById("invNo");
+  if(!el||(!force&&el.value&&el.value!==_autoNo))return;
+  const series=numberSeries();
+  const fallback=fallbackInvoiceNo(series);
+  el.value=_autoNo=fallback;
   if(!APPS_SCRIPT_URL)return;
-  const m=fallback.match(/^([A-Za-z\/]+)\d+\//);
-  const prefix=m?m[1]:"CKLLP/";
-  const fy=getCurrentFY();
-  const url=APPS_SCRIPT_URL+'?action=nextInvoiceNo&prefix='+encodeURIComponent(prefix)
-    +'&fy='+encodeURIComponent(fy)+'&token='+encodeURIComponent(APPS_SCRIPT_TOKEN);
+  const url=APPS_SCRIPT_URL+'?action=nextInvoiceNo&prefix='+encodeURIComponent(NUMBER_PREFIX[series])
+    +'&fy='+encodeURIComponent(getCurrentFY())+'&token='+encodeURIComponent(APPS_SCRIPT_TOKEN);
   fetch(url).then(r=>r.json()).then(data=>{
-    if(data.ok&&data.invNo&&el.value===fallback)el.value=data.invNo;
+    if(data.ok&&data.invNo&&el.value===fallback)el.value=_autoNo=data.invNo;
   }).catch(e=>console.warn('nextInvoiceNo lookup failed, using local fallback:',e));
 }
 function autoSumGrossWeight() {
@@ -2350,7 +2366,7 @@ function makePDF() {
     try{
       saveInvoiceRecord();
       const invNo=document.getElementById("invNo")?.value||"";
-      if(invNo)localStorage.setItem("ck_last_inv_no",invNo);
+      if(invNo)localStorage.setItem(lastNoKey(numberSeries()),invNo);
       const html=docType==='quotation'?buildQuotationHTML():buildHTMLDoc();
       const blob=new Blob([html],{type:'text/html;charset=utf-8'});
       const url=URL.createObjectURL(blob);
