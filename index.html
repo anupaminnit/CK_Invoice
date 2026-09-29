@@ -201,6 +201,10 @@ nav{background:var(--brown);padding:0 36px;display:flex;align-items:center;justi
 .dt-btn{padding:9px 22px;border-radius:40px;border:none;font-family:"Inter Tight",sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s;color:var(--muted);background:none}
 .dt-btn.active{background:var(--brown);color:var(--lgold);box-shadow:0 2px 12px rgba(62,28,0,.35)}
 .dt-btn:not(.active):hover{background:var(--ivory);color:var(--brown)}
+.doc-opts{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:22px}
+.doc-opts .doc-type-bar{margin-bottom:0}
+.seal-tgl{display:flex;align-items:center;gap:8px;background:var(--white);border:1px solid var(--border);border-radius:50px;box-shadow:var(--sh);padding:9px 18px;font-size:.8rem;font-weight:600;cursor:pointer;user-select:none}
+.seal-tgl input{width:16px;height:16px;accent-color:var(--dgold);cursor:pointer}
 
 #bankPreview{background:var(--ivory);border:1.5px solid var(--gold);border-left:4px solid var(--brown);border-radius:var(--r);padding:12px 16px;font-size:.82rem;color:var(--brown);margin-bottom:18px;line-height:1.85}
 /* ── RICH TEXT EDITOR ── */
@@ -236,10 +240,15 @@ nav{background:var(--brown);padding:0 36px;display:flex;align-items:center;justi
 <div class="nav-accent"></div>
 
 <div class="wrap">
-  <div class="doc-type-bar">
-    <button class="dt-btn active" id="dt-invoice" onclick="switchDocType('invoice')">&#128196; Invoice</button>
-    <button class="dt-btn" id="dt-quotation" onclick="switchDocType('quotation')">&#128203; Quotation</button>
-    <button class="dt-btn" id="dt-letter" onclick="switchDocType('letter')">&#9993; Official Letter</button>
+  <div class="doc-opts">
+    <div class="doc-type-bar">
+      <button class="dt-btn active" id="dt-invoice" onclick="switchDocType('invoice')">&#128196; Invoice</button>
+      <button class="dt-btn" id="dt-quotation" onclick="switchDocType('quotation')">&#128203; Quotation</button>
+      <button class="dt-btn" id="dt-letter" onclick="switchDocType('letter')">&#9993; Official Letter</button>
+    </div>
+    <label class="seal-tgl" title="Untick to print a blank signature area for a manual stamp &amp; signature">
+      <input type="checkbox" id="withSeal" checked/> Include seal &amp; signature
+    </label>
   </div>
   <div class="prog">
     <div class="stp on" onclick="go(0)">① Invoice Details</div>
@@ -958,6 +967,17 @@ function genBtnLabel(){
 }
 function updateInvTypeUI(){const b=document.getElementById('genBtn');if(b)b.textContent=genBtnLabel();}
 
+// ── Seal & signature toggle (invoice, quotation, letter) ──────────────────
+function withSeal(){return document.getElementById('withSeal')?.checked!==false;}
+// Stamp+signature image, or an equally sized blank box (same aspect ratio as
+// SIG_B64, 648x220) so the layout doesn't shift and it can be stamped by hand.
+function sealHTML(cls,style){
+  const c=cls?' class="'+cls+'"':'';
+  return withSeal()
+    ? '<img'+c+' src="data:image/jpeg;base64,'+SIG_B64+'" style="'+style+'" alt=""/>'
+    : '<div'+c+' style="'+style+';aspect-ratio:648/220"></div>';
+}
+
 function switchDocType(type) {
   docType=type;
   const isQt=type==='quotation';
@@ -1006,7 +1026,7 @@ function getDraftData() {
     qtTolerance:v("qtTolerance"),qtPackaging:v("qtPackaging"),qtPONo:v("qtPONo"),
     qtOFCarrier:v("qtOFCarrier"),qtOFRate:v("qtOFRate"),qtOFTransit:v("qtOFTransit"),
     qtGrossWt:v("qtGrossWt"),qtNetWt:v("qtNetWt"),qtWtUnit:v("qtWtUnit"),
-    invType:v("invType"),
+    invType:v("invType"),withSeal:withSeal(),
   };
 }
 function restoreDraft(d) {
@@ -1017,6 +1037,7 @@ function restoreDraft(d) {
    'polManual','podManual','qtBuyerCountry','qtAttn','qtAgent','qtTolerance','qtPackaging','qtPONo',
    'qtOFCarrier','qtOFRate','qtOFTransit','qtGrossWt','qtNetWt','qtWtUnit'].forEach(k=>set(k,d[k]));
   set('invType',d.invType||'commercial');
+  if(d.withSeal!=null)document.getElementById('withSeal').checked=!!d.withSeal;
   toggleConsignee();
   if(d.pol)selectPort('pol',d.pol,d.polLabel||d.pol);
   if(d.pod)selectPort('pod',d.pod,d.podLabel||d.pod);
@@ -1321,7 +1342,7 @@ function buildHTMLDoc() {
     return '<div class="sign"><div class="words">'
       +(showW?'<span style="font-family:var(--mono);font-size:7px;letter-spacing:.14em;color:var(--mute);text-transform:uppercase;">Amount in words&nbsp;&nbsp;</span><span class="amt">'+amtWords(netTotal)+'</span>':'')
       +'</div><div class="sigbox"><div class="forco" style="margin-bottom:4px;">FOR CARBON KING LLP</div>'
-      +'<img src="data:image/jpeg;base64,'+SIG_B64+'" style="max-width:180px;height:auto;display:block;margin-left:auto;margin-bottom:4px;" />'
+      +sealHTML('','max-width:180px;height:auto;display:block;margin-left:auto;margin-bottom:4px')
       +'<div class="sigline"><div class="role">AUTHORISED SIGNATORY</div></div></div></div>';
   }
   const TERMS='<div class="terms"><h4>Terms &amp; Conditions</h4><ul>'
@@ -1466,7 +1487,7 @@ function buildQuotationHTML() {
 
   const SIGN='<div class="sign"><div class="words"></div>'
     +'<div class="sigbox"><div class="forco">FOR CARBON KING LLP</div>'
-    +'<img src="data:image/jpeg;base64,'+SIG_B64+'" style="max-width:160px;height:auto;display:block;margin:4px 0 4px auto;" />'
+    +sealHTML('','max-width:160px;height:auto;display:block;margin:4px 0 4px auto')
     +'<div class="sigline"><div class="role">AUTHORISED SIGNATORY</div></div></div></div>';
 
   const TERMS='<div class="terms"><h4>Terms &amp; Conditions</h4><ul>'
@@ -2082,7 +2103,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;f
 </div>
 <div class="sig">
   <div class="closing">Yours faithfully,</div>
-  <img class="seal" src="data:image/jpeg;base64,${SIG_B64}" alt="">
+  ${sealHTML('seal','')}
   <div class="sigline"></div>
   <div class="sigco">For CARBON KING LLP</div>
   <div class="signame">Authorised Signatory</div>
