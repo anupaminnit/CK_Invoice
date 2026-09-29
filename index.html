@@ -1996,11 +1996,10 @@ function rteColor(c) {
   const ph = (el.dataset.ph || '').replace(/\\n/g, '\n');
   function showPh() {
     if (!el.textContent.trim())
-      el.innerHTML = '<span style="color:#9ca3af;pointer-events:none;white-space:pre-wrap">' + ph + '</span>';
+      el.innerHTML = '<span class="rte-ph" style="color:#9ca3af;pointer-events:none;white-space:pre-wrap">' + ph + '</span>';
   }
   function clearPh() {
-    const first = el.firstElementChild;
-    if (first && first.style.color === 'rgb(156, 163, 175)') el.innerHTML = '';
+    if (el.querySelector('.rte-ph')) el.innerHTML = '';
   }
   showPh();
   el.addEventListener('focus', clearPh);
@@ -2008,6 +2007,15 @@ function rteColor(c) {
   el.addEventListener('mouseup', rteSaveRange);
   el.addEventListener('keyup',   rteSaveRange);
 })();
+
+// Letter body from the contenteditable, minus the grey placeholder the editor
+// shows while empty; '' when nothing has been written.
+function letterBodyHTML() {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = document.getElementById("ltrBody")?.innerHTML || '';
+  tmp.querySelectorAll('.rte-ph').forEach(el => el.remove());
+  return tmp.textContent.trim() ? tmp.innerHTML.trim() : '';
+}
 
 function buildLetterHTML() {
   const v = id => document.getElementById(id)?.value || "";
@@ -2018,13 +2026,7 @@ function buildLetterHTML() {
   const toText  = v("ltrTo");
   const subject = v("ltrSubject");
 
-  const bodyEl  = document.getElementById("ltrBody");
-  let rawHTML   = bodyEl ? bodyEl.innerHTML : '';
-  const tmp = document.createElement('div');
-  tmp.innerHTML = rawHTML;
-  const phSpan  = tmp.querySelector('span[style*="rgb(156, 163, 175)"]');
-  if (phSpan) phSpan.remove();
-  const bodyHTML = tmp.innerHTML.trim();
+  const bodyHTML = letterBodyHTML();
 
   let toHTML = '';
   if (toText.trim()) {
@@ -2302,6 +2304,7 @@ function exportRecordsExcel() {
 
 function makePDF() {
   if (docType === 'letter') {
+    if (!letterBodyHTML()) { toast("Write the letter content first","err"); return; }
     try {
       const html = buildLetterHTML();
       const blob = new Blob([html], {type:'text/html'});
