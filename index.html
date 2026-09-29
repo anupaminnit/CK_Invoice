@@ -1416,7 +1416,7 @@ function buildQuotationHTML() {
   const qtGrossWt  = esc(gr("qtGrossWt"));
   const qtNetWt    = esc(gr("qtNetWt"));
   const qtWtUnit   = qtUnit();
-  const qtTolerance= esc(gr("qtTolerance") || "3%");
+  const qtTolerance= esc(gr("qtTolerance").trim());
   const qtPackaging= esc((gr("qtPackaging") || "").toUpperCase());
   const qtOFCarrier= esc((gr("qtOFCarrier") || "").toUpperCase());
   const qtOFRate   = esc(gr("qtOFRate"));
