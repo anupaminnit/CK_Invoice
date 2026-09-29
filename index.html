@@ -237,7 +237,7 @@ nav{background:var(--brown);padding:0 36px;display:flex;align-items:center;justi
 
 <div class="wrap">
   <div class="doc-type-bar">
-    <button class="dt-btn active" id="dt-invoice" onclick="switchDocType('invoice')">&#128196; Commercial Invoice</button>
+    <button class="dt-btn active" id="dt-invoice" onclick="switchDocType('invoice')">&#128196; Invoice</button>
     <button class="dt-btn" id="dt-quotation" onclick="switchDocType('quotation')">&#128203; Quotation</button>
     <button class="dt-btn" id="dt-letter" onclick="switchDocType('letter')">&#9993; Official Letter</button>
   </div>
@@ -258,6 +258,14 @@ nav{background:var(--brown);padding:0 36px;display:flex;align-items:center;justi
       <div class="ch"><div class="ci">🧾</div><h2>Invoice &amp; Contract Details</h2></div>
       <div class="ch-accent"></div>
       <div class="cb">
+        <div id="invTypeRow" style="margin-bottom:14px;max-width:260px">
+          <div class="f"><label>Invoice Type</label>
+            <select id="invType" onchange="updateInvTypeUI()">
+              <option value="commercial">Commercial Invoice</option>
+              <option value="proforma">Proforma Invoice</option>
+            </select>
+          </div>
+        </div>
         <div class="g4">
           <div class="f"><label>Invoice Number <span>*</span></label><input class="mono" id="invNo" placeholder="CKLLP/007/26-27"/></div>
           <div class="f"><label>Invoice Date <span>*</span></label><input type="date" id="invDate"/></div>
@@ -494,7 +502,7 @@ nav{background:var(--brown);padding:0 36px;display:flex;align-items:center;justi
       <button class="btn bs" onclick="showPreview()" style="background:var(--brown);color:var(--lgold);border-color:var(--gold)">👁 Preview PDF</button>
       <button class="btn bs" onclick="openEmailCompose()" style="background:#1B5E20;color:#fff;border-color:#1B5E20">&#9993; Email Draft</button>
       <button class="btn bs" onclick="makePaymentReceipt(this)" style="background:#4a148c;color:#fff;border-color:#4a148c">&#9654; Payment Receipt</button>
-      <button class="btn bg" id="genBtn" onclick="makePDF()">&#8659; Download Invoice + Packing List (PDF)</button>
+      <button class="btn bg" id="genBtn" onclick="makePDF()">&#8659; Download Commercial Invoice + Packing List (PDF)</button>
     </div>
   </div>
 
@@ -940,6 +948,16 @@ window.addEventListener('scroll',()=>{
 // ═══════════════════════════════════════════════════
 // DOC TYPE SWITCH
 // ═══════════════════════════════════════════════════
+// ── Invoice type (commercial | proforma) ──────────────────────────────────
+function isProforma(){return docType==='invoice'&&document.getElementById('invType')?.value==='proforma';}
+function docLabel(){return docType==='quotation'?'Quotation':isProforma()?'Proforma Invoice':'Commercial Invoice';}
+// Proforma is issued before shipment, so it prints without a packing list.
+function genBtnLabel(){
+  if(docType==='quotation')return '\u2913 Download Quotation (PDF)';
+  return isProforma()?'\u2913 Download Proforma Invoice (PDF)':'\u2913 Download Commercial Invoice + Packing List (PDF)';
+}
+function updateInvTypeUI(){const b=document.getElementById('genBtn');if(b)b.textContent=genBtnLabel();}
+
 function switchDocType(type) {
   docType=type;
   const isQt=type==='quotation';
@@ -961,8 +979,8 @@ function switchDocType(type) {
     document.querySelectorAll('.stp').forEach((s,i)=>s.className='stp'+(i===step?' on':i<step?' dn':''));
     ['qtBillToExtra','qtExtraCard'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=isQt?'':'none';});
     const pc=document.getElementById('packingCard');if(pc)pc.style.display=isQt?'none':'';
-    const btn=document.getElementById('genBtn');
-    if(btn)btn.textContent=isQt?'⬇ Download Quotation (PDF)':'⬇ Download Commercial Invoice + Packing List (PDF)';
+    const itr=document.getElementById('invTypeRow');if(itr)itr.style.display=isInv?'':'none';
+    updateInvTypeUI();
     const steps=document.querySelectorAll('.stp');
     if(steps[3])steps[3].textContent=isQt?'④ Quotation Details':'④ Packing & Generate';
     const s1h=document.querySelector('#s1 .ch h2');
@@ -988,6 +1006,7 @@ function getDraftData() {
     qtTolerance:v("qtTolerance"),qtPackaging:v("qtPackaging"),qtPONo:v("qtPONo"),
     qtOFCarrier:v("qtOFCarrier"),qtOFRate:v("qtOFRate"),qtOFTransit:v("qtOFTransit"),
     qtGrossWt:v("qtGrossWt"),qtNetWt:v("qtNetWt"),qtWtUnit:v("qtWtUnit"),
+    invType:v("invType"),
   };
 }
 function restoreDraft(d) {
@@ -997,12 +1016,14 @@ function restoreDraft(d) {
    'notifyName','notifyAddr','notifyTax','coo','grossWt','netWt','pkgCount','pkgType','pkgDesc','pkgTotal','marking',
    'polManual','podManual','qtBuyerCountry','qtAttn','qtAgent','qtTolerance','qtPackaging','qtPONo',
    'qtOFCarrier','qtOFRate','qtOFTransit','qtGrossWt','qtNetWt','qtWtUnit'].forEach(k=>set(k,d[k]));
+  set('invType',d.invType||'commercial');
   toggleConsignee();
   if(d.pol)selectPort('pol',d.pol,d.polLabel||d.pol);
   if(d.pod)selectPort('pod',d.pod,d.podLabel||d.pod);
   if(d.goodsRows){goodsRows=d.goodsRows;}
   updateCurrency();
   if(d.docType)switchDocType(d.docType);
+  updateInvTypeUI();
 }
 // ═══════════════════════════════════════════════════
 // NAMED DRAFT MANAGER
@@ -1186,6 +1207,7 @@ function buildHTMLDoc() {
   const total    = gst.sub;
   const netTotal = gst.net;
   const bankRows = BANK_INFO.rows;
+  const proforma = isProforma();
   const items    = goodsRows.map((r,i)=>({
     sr:i+1, desc:(r.desc||"").toUpperCase(), hs:(r.hscode||"").toUpperCase(),
     unit:(r.unit||"METRIC TONNES").toUpperCase(),
@@ -1308,19 +1330,19 @@ function buildHTMLDoc() {
     +'<li>SUBJECT TO ROURKELA / ODISHA JURISDICTION ONLY. E &amp; O.E</li>'
     +'<li>GOODS SUPPLIED UNDER LUT WITHOUT PAYMENT OF IGST.</li></ul></div>';
   const FOOT='<div class="foot"><span>CARBONKING07@GMAIL.COM</span>'
-    +'<span class="doc-orig">** COMPUTER-GENERATED INVOICE ** | ORIGINAL FOR RECIPIENT</span></div>';
+    +'<span class="doc-orig">'+(proforma?'** COMPUTER-GENERATED PROFORMA INVOICE **':'** COMPUTER-GENERATED INVOICE ** | ORIGINAL FOR RECIPIENT')+'</span></div>';
 
-  const S_INV ='<div class="sheet" id="s0">'+MAST+tb('COMMERCIAL INVOICE')+PARTIES+SHIP+INV_TABLE+PAY_SUM+sign(true)+TERMS+FOOT+'</div>';
+  const S_INV ='<div class="sheet" id="s0">'+MAST+tb(proforma?'PROFORMA INVOICE':'COMMERCIAL INVOICE')+PARTIES+SHIP+INV_TABLE+PAY_SUM+sign(true)+TERMS+FOOT+'</div>';
   const S_PACK='<div class="sheet" id="s1">'+MAST+tb('PACKING LIST')+PARTIES+SHIP+PACK_TABLE+WEIGHTS+sign(false)+TERMS+FOOT+'</div>';
 
   return '<!doctype html><html lang="en"><head><meta charset="utf-8"/><title>Carbon King LLP — '+inv+'</title>'
     +'<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>'
     +'<style>'+_CK_CSS+'</style></head><body>'
     +'<div class="toolbar"><div class="tb-brand"><span class="nm">CARBON KING LLP</span><span class="sub">Anthracite × Gold</span></div>'
-    +'<div class="tb-actions"><button class="tb-btn" id="tBtn" onclick="td()">Show Packing List</button>'
+    +'<div class="tb-actions">'+(proforma?'':'<button class="tb-btn" id="tBtn" onclick="td()">Show Packing List</button>')
     +'<button class="tb-btn primary" onclick="window.print()">Print / Save PDF</button></div></div>'
-    +'<div class="stage"><div id="s0">'+S_INV+'</div><div id="s1" style="display:none">'+S_PACK+'</div></div>'
-    +'<script>var sh="invoice";function td(){sh=sh==="invoice"?"packing":"invoice";document.getElementById("s0").style.display=sh==="invoice"?"":"none";document.getElementById("s1").style.display=sh==="packing"?"":"none";document.getElementById("tBtn").textContent=sh==="invoice"?"Show Packing List":"Show Invoice";}window.addEventListener("beforeprint",function(){document.getElementById("s0").style.display="";document.getElementById("s1").style.display="";});window.addEventListener("afterprint",function(){document.getElementById("s0").style.display=sh==="invoice"?"":"none";document.getElementById("s1").style.display=sh==="packing"?"":"none";});<\/script>'
+    +'<div class="stage"><div id="s0">'+S_INV+'</div>'+(proforma?'':'<div id="s1" style="display:none">'+S_PACK+'</div>')+'</div>'
+    +(proforma?'':'<script>var sh="invoice";function td(){sh=sh==="invoice"?"packing":"invoice";document.getElementById("s0").style.display=sh==="invoice"?"":"none";document.getElementById("s1").style.display=sh==="packing"?"":"none";document.getElementById("tBtn").textContent=sh==="invoice"?"Show Packing List":"Show Invoice";}window.addEventListener("beforeprint",function(){document.getElementById("s0").style.display="";document.getElementById("s1").style.display="";});window.addEventListener("afterprint",function(){document.getElementById("s0").style.display=sh==="invoice"?"":"none";document.getElementById("s1").style.display=sh==="packing"?"":"none";});<\/script>')
     +'</body></html>';
 }
 
@@ -1515,7 +1537,8 @@ function openEmailCompose(){
   const pol=getPort("pol"),pod=getPort("pod");
   const ctNo=document.getElementById("ctNo")?.value||"";
   document.getElementById("emailTo").value="";
-  document.getElementById("emailSubject").value="Commercial Invoice — "+invNo+(ctNo?" | Contract "+ctNo:"");
+  const docDesc=isProforma()?"Proforma Invoice":docType==='quotation'?"Quotation":"Commercial Invoice + Packing List";
+  document.getElementById("emailSubject").value=docLabel()+" — "+invNo+(ctNo?" | Contract "+ctNo:"");
   document.getElementById("emailBody").value=
 `Dear ${notify},
 
@@ -1525,7 +1548,7 @@ Please find attached the following export documents for your reference and recor
   Amount       : ${total}
   Route        : ${pol} → ${pod}${ctNo?"\n  Contract No. : "+ctNo:""}
 
-Kindly review the attached documents (Commercial Invoice + Packing List) and confirm receipt at your earliest convenience. Please arrange payment as per the agreed terms.
+Kindly review the attached documents (${docDesc}) and confirm receipt at your earliest convenience. Please arrange payment as per the agreed terms.
 
 Should you have any questions or require additional documentation, feel free to reach out.
 
@@ -2093,7 +2116,7 @@ function saveInvoiceRecord() {
   const rec = {
     id: Date.now(),
     createdAt: new Date().toISOString(),
-    docType,
+    docType: isProforma() ? 'proforma' : docType,
     invNo: (document.getElementById('invNo')?.value || '').trim(),
     invDate: gr('invDate') ? fd(gr('invDate')) : '',
     buyer: (gr('notifyName') || gr('qtAttn') || '').trim(),
@@ -2266,7 +2289,7 @@ function makePDF() {
       toast("Print window opening — choose Save as PDF","ok");
       setTimeout(()=>URL.revokeObjectURL(url),30000);
     }catch(e){console.error(e);toast("Error: "+e.message,"err");}
-    finally{if(btn){btn.disabled=false;btn.textContent=docType==='quotation'?"⬇ Download Quotation (PDF)":"⬇ Download Commercial Invoice + Packing List (PDF)";}}
+    finally{if(btn){btn.disabled=false;btn.textContent=genBtnLabel();}}
   },100);
 }
 </script>
