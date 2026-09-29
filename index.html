@@ -1396,8 +1396,8 @@ function buildHTMLDoc() {
   const FOOT='<div class="foot"><span>CARBONKING07@GMAIL.COM</span>'
     +'<span class="doc-orig">'+(proforma?'** COMPUTER-GENERATED PROFORMA INVOICE **':'** COMPUTER-GENERATED INVOICE ** | ORIGINAL FOR RECIPIENT')+'</span></div>';
 
-  const S_INV ='<div class="sheet" id="s0">'+MAST+tb(proforma?'PROFORMA INVOICE':'COMMERCIAL INVOICE')+PARTIES+SHIP+INV_TABLE+PAY_SUM+sign(true)+TERMS+FOOT+'</div>';
-  const S_PACK='<div class="sheet" id="s1">'+MAST+tb('PACKING LIST')+PARTIES+SHIP+PACK_TABLE+WEIGHTS+sign(false)+TERMS+FOOT+'</div>';
+  const S_INV ='<div class="sheet">'+MAST+tb(proforma?'PROFORMA INVOICE':'COMMERCIAL INVOICE')+PARTIES+SHIP+INV_TABLE+PAY_SUM+sign(true)+TERMS+FOOT+'</div>';
+  const S_PACK='<div class="sheet">'+MAST+tb('PACKING LIST')+PARTIES+SHIP+PACK_TABLE+WEIGHTS+sign(false)+TERMS+FOOT+'</div>';
 
   return '<!doctype html><html lang="en"><head><meta charset="utf-8"/><title>Carbon King LLP — '+inv+'</title>'
     +'<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>'
@@ -1540,7 +1540,7 @@ function buildQuotationHTML() {
   const FOOT='<div class="foot"><span>CARBONKING07@GMAIL.COM</span>'
     +'<span class="doc-orig">** COMPUTER-GENERATED QUOTATION ** | THIS IS NOT AN INVOICE</span></div>';
 
-  const S_QT='<div class="sheet" id="s0">'+MAST+TITLEBAR+PARTIES+SHIP+QT_TABLE+EXTRA+WF+SIGN+TERMS+FOOT+'</div>';
+  const S_QT='<div class="sheet">'+MAST+TITLEBAR+PARTIES+SHIP+QT_TABLE+EXTRA+WF+SIGN+TERMS+FOOT+'</div>';
 
   return '<!doctype html><html lang="en"><head><meta charset="utf-8"/><title>Carbon King LLP — Quotation '+inv+'</title>'
     +'<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>'
@@ -1578,7 +1578,7 @@ function showPreview(){
         const rawCSS=doc2.querySelector('style')?.textContent||'';
         const scoped=rawCSS.replace(/@media\s+print[\s\S]*?(?=@media|$)/,'').replace(/([^{}@][^{}]*)(\{[^{}]*\})/g,(_,sel,blk)=>{const s=sel.trim();if(!s||s.startsWith(':root')||s.startsWith('@'))return s+blk;return s.split(',').map(q=>'.ck-inv '+q.trim()).join(',')+blk;});
         let si=document.getElementById('_ckPreviewStyle');if(!si){si=document.createElement('style');si.id='_ckPreviewStyle';document.head.appendChild(si);}si.textContent=scoped;
-        const stageHTML=(doc2.getElementById('s0')?.outerHTML||'')+(doc2.getElementById('s1')?.outerHTML||'');
+        const stageHTML=[...doc2.querySelectorAll('.stage .sheet')].map(el=>el.outerHTML).join('');
         pane.innerHTML='<div class="ck-inv" style="display:contents">'+stageHTML+'</div>';
       }
     }catch(e){console.error(e);toast("Preview error: "+e.message,"err");closePreview();}
