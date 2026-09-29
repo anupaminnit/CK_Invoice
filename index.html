@@ -796,11 +796,11 @@ function rebuildGoods() {
       <td><textarea style="min-height:48px;resize:vertical" oninput="goodsRows[${i}].desc=this.value">${esc(r.desc)}</textarea></td>
       <td><input class="mono" value="${esc(r.hscode)}" oninput="goodsRows[${i}].hscode=this.value" style="width:80px"/></td>
       <td><input value="${esc(r.unit)}" oninput="goodsRows[${i}].unit=this.value.toUpperCase();this.value=this.value.toUpperCase()"/></td>
-      <td><input class="mono" type="number" value="${r.qty}" oninput="goodsRows[${i}].qty=this.value;updateTotals()" style="width:64px"/></td>
-      <td><input class="mono" type="number" value="${r.rate}" oninput="goodsRows[${i}].rate=this.value;updateTotals()" style="width:84px"/></td>
+      <td><input class="mono" type="number" value="${esc(r.qty)}" oninput="goodsRows[${i}].qty=this.value;updateTotals()" style="width:64px"/></td>
+      <td><input class="mono" type="number" value="${esc(r.rate)}" oninput="goodsRows[${i}].rate=this.value;updateTotals()" style="width:84px"/></td>
       <td class="mono" style="text-align:right;font-weight:600">${getCurrSymbol()}${fmt(amt)}</td>
-      <td><input class="mono" value="${r.bags||''}" placeholder="e.g. 35" oninput="goodsRows[${i}].bags=this.value" style="width:70px"/></td>
-      <td><input class="mono" value="${r.itemGrossWt||''}" placeholder="e.g. 28199.50" oninput="goodsRows[${i}].itemGrossWt=this.value" style="width:90px"/></td>
+      <td><input class="mono" value="${esc(r.bags||'')}" placeholder="e.g. 35" oninput="goodsRows[${i}].bags=this.value" style="width:70px"/></td>
+      <td><input class="mono" value="${esc(r.itemGrossWt||'')}" placeholder="e.g. 28199.50" oninput="goodsRows[${i}].itemGrossWt=this.value" style="width:90px"/></td>
       <td><button class="del-btn" onclick="goodsRows.splice(${i},1);rebuildGoods()">✕</button></td>`;
     tbody.appendChild(tr);
   });
@@ -823,9 +823,9 @@ function fd(d) {
 function buildSummary() {
   const gst=computeGST();
   document.getElementById("summaryGrid").innerHTML=[
-    {t:"Invoice",h:`<p><strong>${g("invNo")}</strong><br>Date: ${fd(gr("invDate"))}<br>Contract: ${gr("ctNo")}</p>`},
-    {t:"Notify Party",h:`<p>${gr("notifyName")}<br>Tax: ${gr("notifyTax")}</p>`},
-    {t:"Ports",h:`<p>Loading: ${getPort("pol")}<br>Destination: ${getPort("pod")}</p>`},
+    {t:"Invoice",h:`<p><strong>${esc(g("invNo"))}</strong><br>Date: ${fd(gr("invDate"))}<br>Contract: ${esc(gr("ctNo"))}</p>`},
+    {t:"Notify Party",h:`<p>${esc(gr("notifyName"))}<br>Tax: ${esc(gr("notifyTax"))}</p>`},
+    {t:"Ports",h:`<p>Loading: ${esc(getPort("pol"))}<br>Destination: ${esc(getPort("pod"))}</p>`},
     {t:"Goods",h:`<p>${goodsRows.length} line item(s)<br>Total: ${getCurrSymbol()}${fmt(gst.net)}</p>`},
   ].map(b=>`<div class="sb"><h4>${b.t}</h4>${b.h}</div>`).join("");
   document.getElementById("summGrand").textContent=getCurrSymbol()+fmt(gst.net);
@@ -1087,8 +1087,8 @@ function renderDraftList(){
   list.innerHTML=drafts.map((d,i)=>`
     <div class="draft-item">
       <div class="draft-item-info">
-        <div class="draft-item-name">${d.name}</div>
-        <div class="draft-item-meta">${d.savedAt} &bull; ${d.data?.invNo||""} &bull; ${d.data?.notifyName||""}</div>
+        <div class="draft-item-name">${esc(d.name)}</div>
+        <div class="draft-item-meta">${esc(d.savedAt)} &bull; ${esc(d.data?.invNo||"")} &bull; ${esc(d.data?.notifyName||"")}</div>
       </div>
       <div class="draft-item-btns">
         <button class="ab-btn load" onclick="loadNamedDraft(${i})">Load</button>
@@ -1228,28 +1228,28 @@ document.addEventListener('DOMContentLoaded',()=>{
 const _CK_CSS = ":root{--carbon:#1C1C1E;--ink:#1C1C1E;--lime:#C8A820;--lime-dk:#7A5E08;--paper:#FFFFFF;--ice:#F4F0E6;--mute:#6B6B73;--line:#D8D0BC;--sans:'Inter Tight',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace;}*{box-sizing:border-box;margin:0;padding:0;}html,body{background:#3A3B40;font-family:var(--sans);color:var(--ink);-webkit-print-color-adjust:exact;print-color-adjust:exact;}.toolbar{position:fixed;top:0;left:0;right:0;height:54px;z-index:50;background:rgba(28,28,30,.95);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:space-between;padding:0 22px;border-bottom:1px solid rgba(200,168,32,.2);}.toolbar .tb-brand{display:flex;align-items:center;gap:12px;color:#fff;}.toolbar .tb-brand .nm{font-weight:700;letter-spacing:-.02em;font-size:14px;}.toolbar .tb-brand .sub{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--lime);}.tb-actions{display:flex;gap:8px;}.tb-btn{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;border:1px solid rgba(200,168,32,.3);color:rgba(200,168,32,.9);background:transparent;padding:8px 16px;border-radius:999px;cursor:pointer;transition:.15s;}.tb-btn:hover{background:rgba(200,168,32,.1);}.tb-btn.primary{background:var(--lime);color:var(--carbon);border-color:var(--lime);font-weight:700;}.tb-btn.primary:hover{background:#E8C830;}.stage{padding:78px 20px 60px;display:flex;flex-direction:column;align-items:center;gap:28px;}.sheet{width:210mm;min-height:297mm;background:var(--paper);position:relative;box-shadow:0 30px 60px -28px rgba(0,0,0,.6);display:flex;flex-direction:column;padding:14mm 14mm 12mm;}.sheet::before{content:\"\";position:absolute;top:0;left:0;right:0;height:5px;background:var(--lime);}.mast{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:9px;border-bottom:2px solid var(--carbon);}.mast-l{display:flex;gap:13px;align-items:center;}.mast-mark{width:54px;height:54px;flex-shrink:0;}.mast-name{font-size:24px;font-weight:700;letter-spacing:-.03em;color:var(--carbon);line-height:1;}.mast-rule{height:2px;width:30px;background:var(--lime);margin:5px 0;}.mast-tag{font-family:var(--mono);font-size:8px;letter-spacing:.26em;text-transform:uppercase;color:var(--carbon);}.mast-r{text-align:right;font-family:var(--mono);font-size:7.5px;line-height:1.75;color:var(--ink);max-width:74mm;}.mast-r .lbl{color:var(--mute);}.mast-r .em{color:var(--carbon);font-weight:600;}.titlebar{display:flex;justify-content:space-between;align-items:flex-end;margin-top:11px;}.titlebar .tick{height:3px;width:26px;background:var(--lime);margin-bottom:6px;}.titlebar h1{font-size:22px;font-weight:700;letter-spacing:-.035em;color:var(--carbon);line-height:.95;text-transform:uppercase;}.titlebar .meta-no{text-align:right;font-family:var(--mono);font-size:10px;line-height:1.6;white-space:nowrap;}.titlebar .meta-no .lbl{color:var(--mute);}.titlebar .meta-no .v{color:var(--carbon);font-weight:700;}.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-bottom:none;margin-top:11px;}.cell{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:8px 11px;}.cell:nth-child(2n){border-right:none;}.cell .k{font-family:var(--mono);font-size:7px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin-bottom:4px;}.cell .vmain{font-size:11px;font-weight:600;color:var(--carbon);line-height:1.3;}.cell .vsub{font-size:9.5px;color:var(--ink);line-height:1.45;margin-top:2px;}.ship{border:1px solid var(--line);border-top:none;}.ship-row{display:grid;grid-template-columns:1fr 1fr;}.ship-row>div{display:grid;grid-template-columns:120px 1fr;border-bottom:1px solid var(--line);}.ship-row>div:first-child{border-right:1px solid var(--line);}.ship-row:last-child>div{border-bottom:none;}.ship .k{font-family:var(--mono);font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);padding:6px 10px;background:var(--ice);display:flex;align-items:center;}.ship .v{font-size:10px;color:var(--carbon);font-weight:500;padding:6px 10px;display:flex;align-items:center;}.items{margin-top:12px;width:100%;border-collapse:collapse;}.items thead th{background:var(--carbon);color:var(--paper);font-family:var(--mono);font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;padding:8px 9px;text-align:left;font-weight:600;}.items thead th.r{text-align:right;}.items tbody td{border-bottom:1px solid var(--line);border-left:1px solid var(--line);padding:11px 9px;vertical-align:top;font-size:10.5px;}.items tbody td:last-child{border-right:1px solid var(--line);}.items tbody td.r{text-align:right;font-family:var(--mono);white-space:nowrap;}.items .desc-main{font-weight:600;color:var(--carbon);}.items .desc-grade{font-family:var(--mono);font-size:8.5px;color:var(--lime-dk);margin-top:3px;letter-spacing:.04em;font-weight:600;}.items .num{font-family:var(--mono);font-weight:600;color:var(--carbon);}.strip{background:var(--ice);border-left:3px solid var(--lime);padding:7px 12px;display:flex;flex-wrap:wrap;gap:4px 26px;font-size:9.5px;}.strip .k{font-family:var(--mono);font-size:7px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-right:6px;}.strip .v{color:var(--carbon);font-weight:600;}.paysum{display:grid;grid-template-columns:1.35fr 1fr;gap:11px;margin-top:12px;align-items:start;}.box{border:1px solid var(--line);}.box-h{font-family:var(--mono);font-size:7.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--paper);background:var(--carbon);padding:6px 11px;}.pay-body{padding:10px 13px;display:grid;grid-template-columns:auto 1fr;column-gap:16px;row-gap:5px;font-family:var(--mono);font-size:8px;align-items:baseline;}.pay-body .pk{color:var(--mute);white-space:nowrap;letter-spacing:.03em;}.pay-body .pv{color:var(--carbon);min-width:0;word-break:break-word;overflow-wrap:break-word;line-height:1.5;}.sum-body{padding:4px 12px 8px;}.sum-row{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px dashed var(--line);font-size:9.5px;gap:8px;}.sum-row .sk{color:var(--mute);flex:1;min-width:0;}.sum-row .sv{font-family:var(--mono);font-weight:600;color:var(--carbon);white-space:nowrap;flex-shrink:0;text-align:right;}.sum-row.net{background:var(--carbon);color:var(--paper);border:none;margin:6px -12px 0;padding:11px 12px;}.sum-row.net .sk{color:rgba(255,255,255,.7);font-weight:600;text-transform:uppercase;font-family:var(--mono);font-size:9px;letter-spacing:.1em;}.sum-row.net .sv{color:var(--lime);font-size:15px;white-space:nowrap;}.sign{display:flex;justify-content:space-between;align-items:flex-end;margin-top:18px;}.sign .words{font-size:9px;color:var(--mute);max-width:58%;line-height:1.5;}.sign .words .amt{color:var(--carbon);font-weight:600;}.sign .sigbox{text-align:right;}.sign .forco{font-size:10px;color:var(--carbon);margin-bottom:30px;font-weight:600;}.sign .sigline{border-top:1px solid var(--carbon);padding-top:3px;display:inline-block;min-width:180px;}.sign .sigline .role{font-family:var(--mono);font-size:7.5px;letter-spacing:.1em;color:var(--mute);}.terms{margin-top:14px;border-top:1px solid var(--line);padding-top:9px;}.terms h4{font-family:var(--mono);font-size:7.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin-bottom:5px;}.terms ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:2px 24px;}.terms li{font-size:8.5px;color:var(--ink);padding-left:12px;position:relative;line-height:1.5;}.terms li::before{content:\"\";position:absolute;left:0;top:6px;width:4px;height:4px;background:var(--lime);}.foot{padding-top:10px;display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:7.5px;letter-spacing:.06em;color:var(--mute);border-top:2px solid var(--carbon);margin-top:12px;}.foot .doc-orig{color:var(--carbon);font-weight:600;}.wgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px;margin-top:12px;}.wcard{border:1px solid var(--line);padding:11px 13px;}.wcard .wk{font-family:var(--mono);font-size:7px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:5px;}.wcard .wv{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--carbon);}.wcard .wu{font-size:9px;color:var(--mute);margin-top:2px;}.wcard.hl{background:var(--carbon);}.wcard.hl .wk{color:rgba(255,255,255,.7);}.wcard.hl .wv{color:var(--lime);}.wcard.hl .wu{color:rgba(255,255,255,.6);}@media print{html,body{background:#fff;}.toolbar{display:none;}.stage{padding:0;gap:0;}.sheet{box-shadow:none;margin:0;width:auto;min-height:auto;}#s0 .sheet{page-break-after:always;break-after:page;}#s1 .sheet{page-break-after:avoid;break-after:avoid;}@page{size:A4;margin:0;}}";
 
 function buildHTMLDoc() {
-  const inv      = g("invNo");
+  const inv      = esc(g("invNo"));
   const date     = fd(gr("invDate"));
-  const ctNo     = gr("ctNo").toUpperCase();
+  const ctNo     = esc(gr("ctNo").toUpperCase());
   const ctDate   = fd(gr("ctDate"));
-  const ctType   = g("ctType");
-  const inco     = g("inco");
-  const payT     = gr("payTerms").toUpperCase();
-  const coo      = g("coo")||"INDIA";
-  const polV     = getPort("pol").toUpperCase();
-  const podV     = getPort("pod").toUpperCase();
+  const ctType   = esc(g("ctType"));
+  const inco     = esc(g("inco"));
+  const payT     = esc(gr("payTerms").toUpperCase());
+  const coo      = esc(g("coo")||"INDIA");
+  const polV     = esc(getPort("pol").toUpperCase());
+  const podV     = esc(getPort("pod").toUpperCase());
   const consType = gr("consigneeType");
-  const consStr  = consType==="order"?"TO THE ORDER":gr("consigneeName").toUpperCase();
-  const notify   = gr("notifyName").toUpperCase();
-  const nAddr    = gr("notifyAddr").toUpperCase();
-  const nTax     = gr("notifyTax").toUpperCase();
-  const grossWt  = gr("grossWt");
-  const netWt    = gr("netWt");
-  const pkgCount = gr("pkgCount");
-  const pkgType  = g("pkgType");
-  const pkgTotal = gr("pkgTotal").toUpperCase();
-  const marking  = gr("marking").toUpperCase();
-  const curr     = gr("currency")||"USD";
+  const consStr  = esc(consType==="order"?"TO THE ORDER":gr("consigneeName").toUpperCase());
+  const notify   = esc(gr("notifyName").toUpperCase());
+  const nAddr    = esc(gr("notifyAddr").toUpperCase());
+  const nTax     = esc(gr("notifyTax").toUpperCase());
+  const grossWt  = esc(gr("grossWt"));
+  const netWt    = esc(gr("netWt"));
+  const pkgCount = esc(gr("pkgCount"));
+  const pkgType  = esc(g("pkgType"));
+  const pkgTotal = esc(gr("pkgTotal").toUpperCase());
+  const marking  = esc(gr("marking").toUpperCase());
+  const curr     = getCurrCode();
   const curSym   = getCurrSymbol();
   const gst      = computeGST();
   const total    = gst.sub;
@@ -1257,8 +1257,8 @@ function buildHTMLDoc() {
   const bankRows = BANK_INFO.rows;
   const proforma = isProforma();
   const items    = goodsRows.map((r,i)=>({
-    sr:i+1, desc:(r.desc||"").toUpperCase(), hs:(r.hscode||"").toUpperCase(),
-    unit:(r.unit||"METRIC TONNES").toUpperCase(),
+    sr:i+1, desc:(r.desc||"").toUpperCase(), hs:esc((r.hscode||"").toUpperCase()),
+    unit:esc((r.unit||"METRIC TONNES").toUpperCase()),
     qty:num(r.qty), rate:num(r.rate),
     amount:num(r.qty)*num(r.rate),
     bags:Math.trunc(num(r.bags)), gross:num(r.itemGrossWt),
@@ -1384,38 +1384,38 @@ function buildHTMLDoc() {
 }
 
 function buildQuotationHTML() {
-  const inv        = g("invNo");
+  const inv        = esc(g("invNo"));
   const date       = fd(gr("invDate"));
-  const ctType     = g("ctType");
-  const inco       = g("inco");
-  const payT       = gr("payTerms").toUpperCase();
-  const coo        = g("coo") || "INDIA";
-  const polV       = getPort("pol").toUpperCase();
-  const podV       = getPort("pod").toUpperCase();
-  const notify     = gr("notifyName").toUpperCase();
-  const nAddr      = gr("notifyAddr").toUpperCase();
-  const nTax       = gr("notifyTax").toUpperCase();
-  const qtAttn     = gr("qtAttn").toUpperCase();
-  const qtAgent    = gr("qtAgent").toUpperCase();
-  const qtGrossWt  = gr("qtGrossWt");
-  const qtNetWt    = gr("qtNetWt");
+  const ctType     = esc(g("ctType"));
+  const inco       = esc(g("inco"));
+  const payT       = esc(gr("payTerms").toUpperCase());
+  const coo        = esc(g("coo") || "INDIA");
+  const polV       = esc(getPort("pol").toUpperCase());
+  const podV       = esc(getPort("pod").toUpperCase());
+  const notify     = esc(gr("notifyName").toUpperCase());
+  const nAddr      = esc(gr("notifyAddr").toUpperCase());
+  const nTax       = esc(gr("notifyTax").toUpperCase());
+  const qtAttn     = esc(gr("qtAttn").toUpperCase());
+  const qtAgent    = esc(gr("qtAgent").toUpperCase());
+  const qtGrossWt  = esc(gr("qtGrossWt"));
+  const qtNetWt    = esc(gr("qtNetWt"));
   const qtWtUnit   = qtUnit();
-  const qtTolerance= gr("qtTolerance") || "3%";
-  const qtPackaging= (gr("qtPackaging") || "").toUpperCase();
-  const qtOFCarrier= (gr("qtOFCarrier") || "").toUpperCase();
-  const qtOFRate   = gr("qtOFRate");
-  const qtOFTransit= gr("qtOFTransit");
-  const qtPONo     = (gr("qtPONo") || "").toUpperCase();
-  const qtBuyerCountry = (g("qtBuyerCountry") || "").toUpperCase();
-  const curr       = gr("currency") || "USD";
+  const qtTolerance= esc(gr("qtTolerance") || "3%");
+  const qtPackaging= esc((gr("qtPackaging") || "").toUpperCase());
+  const qtOFCarrier= esc((gr("qtOFCarrier") || "").toUpperCase());
+  const qtOFRate   = esc(gr("qtOFRate"));
+  const qtOFTransit= esc(gr("qtOFTransit"));
+  const qtPONo     = esc((gr("qtPONo") || "").toUpperCase());
+  const qtBuyerCountry = esc((g("qtBuyerCountry") || "").toUpperCase());
+  const curr       = getCurrCode();
   const curSym     = getCurrSymbol();
   const gst        = computeGST();
   const total      = gst.sub;
   const netTotal   = gst.net;
 
   const items = goodsRows.map((r,i) => ({
-    sr: i+1, desc: (r.desc||"").toUpperCase(), hs: (r.hscode||"").toUpperCase(),
-    unit: (r.unit||"METRIC TONNES").toUpperCase(),
+    sr: i+1, desc: (r.desc||"").toUpperCase(), hs: esc((r.hscode||"").toUpperCase()),
+    unit: esc((r.unit||"METRIC TONNES").toUpperCase()),
     qty: num(r.qty), rate: num(r.rate),
     amount: num(r.qty)*num(r.rate),
   }));
@@ -2181,7 +2181,7 @@ function renderRecordsTable(recs) {
   count.textContent = recs.length + ' record' + (recs.length !== 1 ? 's' : '');
   const rows = recs.map((r,i) => {
     const typeLabel = r.docType === 'quotation' ? 'quotation' : (r.docType === 'proforma' ? 'proforma' : 'invoice');
-    const amt = r.amount ? r.currency + ' ' + Number(r.amount).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '-';
+    const amt = r.amount ? esc(r.currency) + ' ' + Number(r.amount).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '-';
     const at = r.createdAt ? new Date(r.createdAt).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
     return `<tr>
       <td class="td-no">${esc(r.invNo||'-')}</td>
@@ -2193,8 +2193,8 @@ function renderRecordsTable(recs) {
       <td style="color:var(--muted);font-size:.75rem">${esc(r.pod||'-')}</td>
       <td style="color:var(--muted);font-size:.75rem;white-space:nowrap">${at}</td>
       <td style="white-space:nowrap">
-        <button class="td-load" onclick="loadRecordToForm(${r.id})" title="Load into form">&#8635;</button>
-        <button class="td-del" onclick="deleteRecord(${r.id})" title="Delete">&#10005;</button>
+        <button class="td-load" onclick="loadRecordToForm(${Number(r.id)||0})" title="Load into form">&#8635;</button>
+        <button class="td-del" onclick="deleteRecord(${Number(r.id)||0})" title="Delete">&#10005;</button>
       </td>
     </tr>`;
   }).join('');
@@ -2248,7 +2248,7 @@ function deleteRecord(id) {
     method: 'POST', mode: 'no-cors',
     body: JSON.stringify({action: 'delete', id, token: APPS_SCRIPT_TOKEN}),
   }).catch(e => console.warn('Delete failed:', e));
-  _cachedRecords = _cachedRecords.filter(r => r.id !== id);
+  _cachedRecords = _cachedRecords.filter(r => String(r.id) !== String(id));
   renderRecordsTable(_cachedRecords);
 }
 
