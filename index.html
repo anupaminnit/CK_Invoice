@@ -1140,7 +1140,7 @@ function saveDraft(){openDraftManager();}
 function loadDraft(){openDraftManager();}
 function cloneInvoice() {
   const d=getDraftData();
-  const t=new Date();d.invDate=t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");
+  d.invDate=todayISO();
   restoreDraft(d);
   autoInvoiceNumber(true);   // next number from the Sheet, not a local +1 that may already be taken
   go(0);toast("Invoice cloned","ok");
@@ -1196,8 +1196,13 @@ function getCurrentFY() {
   const n=new Date(),y=n.getFullYear(),m=n.getMonth()+1,s=m>=4?y:y-1;
   return String(s).slice(-2)+"-"+String(s+1).slice(-2);
 }
+// Local-time YYYY-MM-DD (toISOString is UTC — yesterday before 05:30 IST).
+function todayISO() {
+  const t=new Date();
+  return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");
+}
 function autoFillDate() {
-  const el=document.getElementById("invDate");if(el&&!el.value){const t=new Date();el.value=t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");}
+  const el=document.getElementById("invDate");if(el&&!el.value)el.value=todayISO();
 }
 // Each document type has its own number series so quotations and proformas
 // don't consume commercial-invoice numbers. The Sheet's nextInvoiceNo matches
@@ -2090,8 +2095,7 @@ function buildLetterHTML() {
   const v = id => document.getElementById(id)?.value || "";
   const ref     = v("ltrRef") || "CKLLP/LTR/2026/001";
   const rawDate = v("ltrDate");
-  const dateStr = rawDate ? rawDate.split("-").reverse().join("/")
-                          : new Date().toLocaleDateString("en-IN");
+  const dateStr = fd(rawDate || todayISO());
   const toText  = v("ltrTo");
   const subject = v("ltrSubject");
 
